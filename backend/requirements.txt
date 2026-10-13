@@ -1,0 +1,17 @@
+# LedgerLeaf Backend
+# Requires Python 3.11+
+#
+# Setup (one time):
+#   python -m venv .venv
+#   .venv\Scripts\activate
+#   pip install -e ".[dev]"
+#
+# Run:
+#   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+#
+# Tests:
+#   pytest
+#
+# Migration:
+#   alembic revision --autogenerate -m "describe change"
+#   alembic upgrade head
