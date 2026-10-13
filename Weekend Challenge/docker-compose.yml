@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  maz3r:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./database:/app/database
