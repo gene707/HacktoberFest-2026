@@ -1,13 +1,4 @@
-import { useState, useCallback, useRef } from "react";
-
-let _idCounter = 0;
-function useStableId(prefix: string): string {
-  const ref = useRef<string | null>(null);
-  if (ref.current === null) {
-    ref.current = `${prefix}-${++_idCounter}`;
-  }
-  return ref.current;
-}
+import { useId, useState, useCallback } from "react";
 import type { ExpenseCreateVariables, ExpenseUpdateVariables } from "../types/expenses";
 
 const DOCUMENT_TYPES = ["invoice", "receipt", "statement", "credit note", "other"];
@@ -45,9 +36,10 @@ interface FieldProps {
   list?: string;
   inputMode?: React.InputHTMLAttributes<HTMLInputElement>["inputMode"];
   children?: React.ReactNode;
+  dataTestId?: string;
 }
 
-function Field({ id, label, name, type = "text", value, onChange, error, required, autoComplete, min, max, disabled, list, inputMode, children }: FieldProps) {
+function Field({ id, label, name, type = "text", value, onChange, error, required, autoComplete, min, max, disabled, list, inputMode, children, dataTestId }: FieldProps) {
   const describedBy = error ? ` ${id}-error` : "";
   return (
     <div className="field">
@@ -66,6 +58,7 @@ function Field({ id, label, name, type = "text", value, onChange, error, require
           disabled={disabled}
           aria-invalid={!!error}
           aria-describedby={describedBy ? id + "-error" : undefined}
+          data-testid={dataTestId ?? undefined}
         >
           <option value="">— Select —</option>
           {children}
@@ -87,7 +80,7 @@ function Field({ id, label, name, type = "text", value, onChange, error, require
           inputMode={inputMode ?? undefined}
           aria-invalid={!!error}
           aria-describedby={describedBy ? id + "-error" : undefined}
-          aria-label={label}
+          data-testid={dataTestId ?? undefined}
         />
       )}
       {error && <p id={`${id}-error`} className="field-error" role="alert">{error}</p>}
@@ -112,17 +105,17 @@ export function ExpenseForm({
   saving = false,
   submitLabel,
 }: ExpenseFormProps) {
-  const vendorId = useStableId("vendor");
-  const docTypeId = useStableId("doctype");
-  const docDateId = useStableId("docdate");
-  const docNumId = useStableId("docnum");
-  const currencyId = useStableId("currency");
-  const subtotalId = useStableId("subtotal");
-  const taxId = useStableId("tax");
-  const totalId = useStableId("total");
-  const categoryId = useStableId("category");
-  const origRefId = useStableId("origref");
-  const notesId = useStableId("notes");
+  const vendorId = useId();
+  const docTypeId = useId();
+  const docDateId = useId();
+  const docNumId = useId();
+  const currencyId = useId();
+  const subtotalId = useId();
+  const taxId = useId();
+  const totalId = useId();
+  const categoryId = useId();
+  const origRefId = useId();
+  const notesId = useId();
 
   const [vendor, setVendor] = useState(initial?.vendor ?? "");
   const [documentType, setDocumentType] = useState(initial?.documentType ?? "");
@@ -146,7 +139,7 @@ export function ExpenseForm({
     if (!documentDate) next[docDateId] = "Document date is required.";
     else if (isNaN(Date.parse(documentDate))) next[docDateId] = "Enter a valid date.";
     if (!currency) next[currencyId] = "Currency is required.";
-    if (!/^[A-Za-z]{3}$/.test(currency)) next[currencyId] = "Use a 3-letter currency code.";
+    else if (!/^[A-Za-z]{3}$/.test(currency)) next[currencyId] = "Use a 3-letter currency code.";
     if (!subtotal) next[subtotalId] = "Subtotal is required.";
     else if (!/^(0|[1-9]\d*)(\.\d{1,4})?$/.test(subtotal)) next[subtotalId] = "Enter a valid amount.";
     if (!tax) next[taxId] = "Tax is required.";
@@ -177,10 +170,11 @@ export function ExpenseForm({
   };
 
   return (
-    <form className="expense-form" onSubmit={handleSubmit} noValidate>
+    <form className="expense-form" onSubmit={handleSubmit} noValidate data-testid="expense-form">
       <div className="field-grid">
         <Field
           id={vendorId}
+          dataTestId="vendor"
           label="Vendor"
           name="vendor"
           value={vendor}
@@ -192,6 +186,7 @@ export function ExpenseForm({
         />
         <Field
           id={docTypeId}
+          dataTestId="documentType"
           label="Document type"
           name="documentType"
           type="select"
@@ -206,6 +201,7 @@ export function ExpenseForm({
         </Field>
         <Field
           id={docDateId}
+          dataTestId="documentDate"
           label="Document date"
           name="documentDate"
           type="date"
@@ -216,6 +212,7 @@ export function ExpenseForm({
         />
         <Field
           id={docNumId}
+          dataTestId="documentNumber"
           label="Document number"
           name="documentNumber"
           value={documentNumber}
@@ -224,6 +221,7 @@ export function ExpenseForm({
         />
         <Field
           id={currencyId}
+          dataTestId="currency"
           label="Currency"
           name="currency"
           type="select"
@@ -238,6 +236,7 @@ export function ExpenseForm({
         </Field>
         <Field
           id={subtotalId}
+          dataTestId="subtotal"
           label="Subtotal"
           name="subtotal"
           type="text"
@@ -249,6 +248,7 @@ export function ExpenseForm({
         />
         <Field
           id={taxId}
+          dataTestId="tax"
           label="Tax"
           name="tax"
           type="text"
@@ -260,6 +260,7 @@ export function ExpenseForm({
         />
         <Field
           id={totalId}
+          dataTestId="total"
           label="Total"
           name="total"
           type="text"
@@ -271,6 +272,7 @@ export function ExpenseForm({
         />
         <Field
           id={categoryId}
+          dataTestId="category"
           label="Category"
           name="category"
           type="select"
@@ -285,6 +287,7 @@ export function ExpenseForm({
         </Field>
         <Field
           id={origRefId}
+          dataTestId="originalDocumentReference"
           label="Original document reference"
           name="originalDocumentReference"
           value={originalDocumentReference}

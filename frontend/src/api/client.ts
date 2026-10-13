@@ -70,6 +70,12 @@ export async function updateExpense(
 export async function deleteExpense(id: string): Promise<void> {
   const res = await fetch(`${BASE}/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    throw new Error(`Delete failed: ${res.status}`);
+    let body: ApiError;
+    try {
+      body = (await res.json()) as ApiError;
+    } catch {
+      body = { detail: res.statusText };
+    }
+    throw new Error(body.detail ?? `Delete failed: ${res.status}`);
   }
 }

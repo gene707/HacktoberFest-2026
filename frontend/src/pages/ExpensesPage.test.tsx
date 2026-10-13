@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { ExpensesPage } from "./ExpensesPage";
@@ -110,9 +110,12 @@ describe("ExpensesPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "New expense" })).toBeInTheDocument();
     });
-    // Form fields are present in the DOM (verified by test snapshots);
-    // accessible-name queries in jsdom are unreliable with React useId().
-    expect(screen.getByRole("textbox", { name: /Vendor/ })).toBeInTheDocument();
+    expect(screen.getByTestId("vendor")).toBeInTheDocument();
+    expect(screen.getByTestId("documentType")).toBeInTheDocument();
+    expect(screen.getByTestId("documentDate")).toBeInTheDocument();
+    expect(screen.getByTestId("currency")).toBeInTheDocument();
+    expect(screen.getByTestId("subtotal")).toBeInTheDocument();
+    expect(screen.getByTestId("category")).toBeInTheDocument();
   });
 
   it("submits the create form and calls the API on success", async () => {
@@ -132,16 +135,16 @@ describe("ExpensesPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "New expense" })).toBeInTheDocument();
     });
-    await waitFor(() => screen.getByRole("textbox", { name: /Vendor/ }));
+    await waitFor(() => screen.getByTestId("vendor"));
 
-    await user.type(screen.getByRole("textbox", { name: /Vendor/ }), "Test Vendor");
-    await user.selectOptions(screen.getByRole("combobox", { name: /Document type/ }), "receipt");
-    await user.type(screen.getByRole("textbox", { name: /Document date/ }), "2025-01-15");
-    await user.selectOptions(screen.getByRole("combobox", { name: /Currency/ }), "EUR");
-    await user.type(screen.getByRole("textbox", { name: /Subtotal/ }), "100");
-    await user.type(screen.getByRole("textbox", { name: /Tax/ }), "10");
-    await user.type(screen.getByRole("textbox", { name: /Total/ }), "110");
-    await user.selectOptions(screen.getByRole("combobox", { name: /Category/ }), "Office Supplies");
+    await user.type(screen.getByTestId("vendor"), "Test Vendor");
+    await user.selectOptions(screen.getByTestId("documentType"), "receipt");
+    await user.type(screen.getByTestId("documentDate"), "2025-01-15");
+    await user.selectOptions(screen.getByTestId("currency"), "EUR");
+    await user.type(screen.getByTestId("subtotal"), "100");
+    await user.type(screen.getByTestId("tax"), "10");
+    await user.type(screen.getByTestId("total"), "110");
+    await user.selectOptions(screen.getByTestId("category"), "Office Supplies");
 
     await user.click(screen.getByRole("button", { name: /Create expense/ }));
 
@@ -150,24 +153,18 @@ describe("ExpensesPage", () => {
         expect.objectContaining({ vendor: "Test Vendor", currency: "EUR" }),
       );
     });
-  });
-
-  it("validates required fields and shows errors on submit", async () => {
-    const user = userEvent.setup();
+  });  it("validates required fields and shows errors on submit", async () => {
     renderExpenses("/expenses/new");
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "New expense" })).toBeInTheDocument();
-    });
-    await waitFor(() => screen.getByRole("textbox", { name: /Vendor/ }));
-
-    await user.click(screen.getByRole("button", { name: /Create expense/ }));
+    await waitFor(() => screen.getByTestId("vendor"));
+    const form = screen.getByTestId("expense-form");
+    fireEvent.submit(form);
 
     await waitFor(() => {
-      expect(screen.getByText("Vendor is required")).toBeInTheDocument();
+      expect(screen.getByText((content: string) => content.includes("Vendor is required"))).toBeInTheDocument();
     });
-    expect(screen.getByText("Document type is required")).toBeInTheDocument();
-    expect(screen.getByText("Document date is required")).toBeInTheDocument();
-    expect(screen.getByText("Currency is required")).toBeInTheDocument();
+    expect(screen.getByText((content: string) => content.includes("Document type is required"))).toBeInTheDocument();
+    expect(screen.getByText((content: string) => content.includes("Document date is required"))).toBeInTheDocument();
+    expect(screen.getByText((content: string) => content.includes("Currency is required"))).toBeInTheDocument();
   });
 });
